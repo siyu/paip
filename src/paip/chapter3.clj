@@ -7,12 +7,15 @@
   "General Problem Solver: achieve all goals"
   [init-state goals ops]
   (let [state (atom init-state)]
-    (when (every? (partial achieve state ops) goals) "solved")))
+    (if (every? (partial achieve state ops) goals)
+      "solved"
+      "unsolvable")))
 
 (defn achieve
   "A goal is achieved if it already holds"
   [state ops goal]
-  (or (get @state goal)
+  (println "achieving goal=" goal)
+  (or (contains? @state goal)
       (some (partial apply-op state ops)
             (filter (partial appropriate-p goal) ops))))
 
@@ -23,12 +26,13 @@
     (println "executing" (:action op))
     (swap! state difference (:del-list op))
     (swap! state union (:add-list op))
+    (println "state=" @state)
     true))
 
 (defn appropriate-p
   "An op is appropriate to a goal if it is in it's add-list"
   [goal op]
-  (get (:add-list op) goal))
+  (contains? (:add-list op) goal))
 
 (def school-ops
   [{:action :drive-son-to-school
@@ -62,4 +66,12 @@
 
 (gps #{:son-at-home :car-works}
      #{:son-at-school}
+     school-ops)
+
+(gps #{:son-at-home :have-money :car-works}
+     #{:have-money :son-at-school}
+     school-ops)
+
+(gps #{:son-at-home :car-needs-battery :have-money :have-phone-book}
+     #{:have-money :son-at-school}
      school-ops)
